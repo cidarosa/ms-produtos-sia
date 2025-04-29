@@ -1,10 +1,13 @@
 package br.com.fiap.ms_produto.service;
 
+import br.com.fiap.ms_produto.dto.LojaDTO;
 import br.com.fiap.ms_produto.dto.ProdutoRequestDTO;
 import br.com.fiap.ms_produto.dto.ProdutoResponseDTO;
 import br.com.fiap.ms_produto.entities.Categoria;
+import br.com.fiap.ms_produto.entities.Loja;
 import br.com.fiap.ms_produto.entities.Produto;
 import br.com.fiap.ms_produto.repositories.CategoriaRepository;
+import br.com.fiap.ms_produto.repositories.LojaRepository;
 import br.com.fiap.ms_produto.repositories.ProdutoRepository;
 import br.com.fiap.ms_produto.service.exceptions.DatabaseException;
 import br.com.fiap.ms_produto.service.exceptions.ResourceNotFoundException;
@@ -24,6 +27,9 @@ public class ProdutoService {
 
     @Autowired
     private CategoriaRepository categoriaRepository;
+
+    @Autowired
+    private LojaRepository lojaRepository;
 
     @Transactional(readOnly = true)
     public List<ProdutoResponseDTO> findAll() {
@@ -56,22 +62,22 @@ public class ProdutoService {
     }
 
     @Transactional
-    public ProdutoResponseDTO update(Long id, ProdutoRequestDTO requestDTO){
+    public ProdutoResponseDTO update(Long id, ProdutoRequestDTO requestDTO) {
 
-        try{
+        try {
             Produto entity = repository.getReferenceById(id);
             toEntity(requestDTO, entity);
             entity = repository.save(entity);
             return new ProdutoResponseDTO(entity);
-        } catch (EntityNotFoundException ex){
+        } catch (EntityNotFoundException ex) {
             throw new ResourceNotFoundException("Recurso não encontrado. Id: " + id);
         }
     }
 
     @Transactional
-    public void delete(Long id){
+    public void delete(Long id) {
 
-        if(!repository.existsById(id)){
+        if (!repository.existsById(id)) {
             throw new ResourceNotFoundException("Recurso não encontrado. Id: " + id);
         }
         repository.deleteById(id);
@@ -85,6 +91,15 @@ public class ProdutoService {
         // Objeto completo gerenciado
         Categoria categoria = categoriaRepository.getReferenceById(requestDTO.categoria().getId());
         entity.setCategoria(categoria);
+
+        // limpando a colection
+        entity.getLojas().clear();
+
+        // buscar Loja pelo ID e adicionar ao produto
+        for (LojaDTO lojaDTO : requestDTO.lojas()) {
+            Loja loja = lojaRepository.getReferenceById(lojaDTO.getId());
+            entity.getLojas().add(loja); // adiciona a Loja gerenciada ao produto
+        }
     }
 
 }
