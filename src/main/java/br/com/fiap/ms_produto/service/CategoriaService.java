@@ -1,6 +1,7 @@
 package br.com.fiap.ms_produto.service;
 
 import br.com.fiap.ms_produto.dto.CategoriaDTO;
+import br.com.fiap.ms_produto.dto.ProdutoResponseDTO;
 import br.com.fiap.ms_produto.entities.Categoria;
 import br.com.fiap.ms_produto.repositories.CategoriaRepository;
 import br.com.fiap.ms_produto.service.exceptions.DatabaseException;
@@ -19,6 +20,18 @@ public class CategoriaService {
 
     @Autowired
     private CategoriaRepository repository;
+
+    @Transactional(readOnly = true)
+    public List<ProdutoResponseDTO> findProdutosByCategoria(Long categoriaId){
+
+        Categoria entity = repository.findById(categoriaId).orElseThrow(
+                () -> new ResourceNotFoundException("Recurso não encontrado. ID: " + categoriaId)
+        );
+
+        return entity.getProdutos()
+                .stream()
+                .map(ProdutoResponseDTO::new).toList();
+    }
 
     @Transactional(readOnly = true)
     public List<CategoriaDTO> findAll() {
